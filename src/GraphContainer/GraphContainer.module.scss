@@ -1,0 +1,9 @@
+.graph-container {
+  width: 100vw;
+  height: 100vh;
+}
+.graph-container.edit {
+  canvas {
+    pointer-events: none;
+  }
+}
