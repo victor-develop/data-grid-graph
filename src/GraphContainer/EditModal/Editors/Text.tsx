@@ -1,5 +1,5 @@
 import { EditorProps } from 'react-data-grid';
-import { ModelRow } from '../EditModal';
+import { ModelRow } from '../../../mockData';
 import styles from '../EditModal.module.scss';
 
 const TextEditor = ({
@@ -12,7 +12,7 @@ const TextEditor = ({
     <input
       className={styles['text-input']}
       ref={(el) => el?.focus()}
-      value={row[column.key] as string}
+      value={row[column.key] ?? ''}
       onChange={(event) =>
         onRowChange({ ...row, [column.key]: event.target.value })
       }

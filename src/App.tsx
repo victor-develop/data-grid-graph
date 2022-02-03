@@ -1,10 +1,13 @@
 import GraphContainer from './GraphContainer/GraphContainer';
+import { QueryProvider } from './queryClient';
 
 function App() {
   return (
-    <div className="App">
-      <GraphContainer />
-    </div>
+    <QueryProvider>
+      <div className="App">
+        <GraphContainer />
+      </div>
+    </QueryProvider>
   );
 }
 

@@ -1,148 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import G6, { Graph, GraphData } from '@antv/g6';
 import ReactDOM from 'react-dom';
 import EditModal, { EditData } from './EditModal/EditModal';
 import styles from './GraphContainer.module.scss';
-
-const data: GraphData = {
-  nodes: [
-    {
-      id: 'return',
-      label: 'return',
-      data: {
-        model: {
-          fields: {},
-          rows: [],
-        },
-      },
-    },
-    {
-      id: 'order',
-      label: 'order',
-      data: {
-        model: {
-          fields: {
-            'Field Key': 'string',
-            'PII(Personal Identifiable Information)': 'boolean',
-            Type: 'string',
-            Nullable: 'boolean',
-          },
-          rows: [
-            {
-              'Field Key': 'order_id',
-              'PII(Personal Identifiable Information)': 'false',
-              Type: 'string',
-              Nullable: 'false',
-            },
-            {
-              'Field Key': 'fulfillment_id',
-              'PII(Personal Identifiable Information)': 'false',
-              Type: 'string',
-              Nullable: 'false',
-            },
-            {
-              'Field Key': 'fulfillment_at',
-              'PII(Personal Identifiable Information)': 'false',
-              Type: 'timestamp',
-              Nullable: 'false',
-            },
-          ],
-        },
-      },
-    },
-    {
-      id: 'fulfillment',
-      label: 'fulfillment',
-      data: {
-        model: {
-          fields: {
-            'Field Key': 'string',
-            'PII(Personal Identifiable Information)': 'boolean',
-            Type: 'string',
-            Nullable: 'boolean',
-          },
-          rows: [
-            {
-              'Field Key': 'order_id',
-              'PII(Personal Identifiable Information)': 'false',
-              Type: 'string',
-              Nullable: 'false',
-            },
-            {
-              'Field Key': 'fulfillment_id',
-              'PII(Personal Identifiable Information)': 'false',
-              Type: 'string',
-              Nullable: 'false',
-            },
-            {
-              'Field Key': 'fulfillment_at',
-              'PII(Personal Identifiable Information)': 'false',
-              Type: 'timestamp',
-              Nullable: 'false',
-            },
-          ],
-        },
-      },
-    },
-    {
-      id: 'tracking',
-      label: 'tracking',
-      data: {
-        model: {
-          fields: {
-            'Field Key': 'string',
-            'PII(Personal Identifiable Information)': 'boolean',
-            Type: 'string',
-            Nullable: 'boolean',
-          },
-          rows: [
-            {
-              'Field Key': 'order_id',
-              'PII(Personal Identifiable Information)': 'false',
-              Type: 'string',
-              Nullable: 'false',
-            },
-            {
-              'Field Key': 'fulfillment_id',
-              'PII(Personal Identifiable Information)': 'true',
-              Type: 'string',
-              Nullable: 'false',
-            },
-            {
-              'Field Key': 'tracking_number',
-              'PII(Personal Identifiable Information)': 'false',
-              Type: 'timestamp',
-              Nullable: 'false',
-            },
-          ],
-        },
-      },
-    },
-  ],
-  edges: [
-    {
-      source: 'order',
-      target: 'fulfillment',
-      label: 'order_id',
-      data: ['order_id(Field Key, PII, Type, Nullable)'],
-    },
-    {
-      source: 'fulfillment',
-      target: 'tracking',
-      label: 'order_id, fulfillment_id',
-      data: [
-        'order_id(Field Key, PII, Type)',
-        'fulfillment_id(Field Key, PII, Type)',
-      ],
-    },
-    {
-      source: 'order',
-      target: 'return',
-      label: 'order_id',
-      data: ['order_id(Field Key, PII, Type, Nullable)'],
-    },
-  ],
-};
+import { useQuery } from 'react-query';
+import { getGraphData } from '../mockData';
 
 const tooltip = new G6.Tooltip({
   offsetX: 10,
@@ -161,21 +23,28 @@ const tooltip = new G6.Tooltip({
 const calcSep = (graph: Graph, id: string): number => {
   const node = graph.findById(id);
   const neighbors = (node as any).getNeighbors('source');
-  return neighbors.length * 10;
+  return neighbors.length * 50;
 };
 
 const GraphContainer = () => {
+  const { data } = useQuery('graphData', async () => getGraphData());
   const ref = React.useRef(null);
-  let graph: Graph;
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editData, setEditData] = useState<EditData | null>(null);
+  const [editData, setEditData] = useState<EditData>({});
   const closeEditModal = () => {
     setShowEditModal(false);
-    setEditData(null);
+    setEditData({});
   };
+  const openAddModal = () => {
+    setShowEditModal(true);
+    setEditData({});
+  };
+  const graphRef = useRef<Graph | null>(null);
+
   useEffect(() => {
-    if (!graph) {
-      graph = new G6.Graph({
+    if (!data) return;
+    if (!graphRef.current) {
+      graphRef.current = new G6.Graph({
         container: ReactDOM.findDOMNode(ref.current) as HTMLElement,
         fitView: true,
         modes: {
@@ -183,10 +52,13 @@ const GraphContainer = () => {
         },
         layout: {
           type: 'dagre',
-          rankdir: 'TB',
+          rankdir: 'LR',
           align: 'UL',
-          nodesepFunc: ({ id }: { id: string }) => calcSep(graph, id),
-          ranksepFunc: ({ id }: { id: string }) => calcSep(graph, id),
+          controlPoints: true,
+          nodesepFunc: ({ id }: { id: string }) =>
+            calcSep(graphRef.current as Graph, id),
+          ranksepFunc: ({ id }: { id: string }) =>
+            calcSep(graphRef.current as Graph, id),
         },
         defaultNode: {
           type: 'modelRect',
@@ -205,6 +77,7 @@ const GraphContainer = () => {
               path: 'M 0,0 L 8,4 L 8,-4 Z',
               fill: '#e2e2e2',
             },
+            radius: 20,
           },
           labelCfg: {
             style: {
@@ -214,17 +87,27 @@ const GraphContainer = () => {
         },
         plugins: [tooltip],
       });
+      graphRef.current.on('node:click', ({ item }) => {
+        const itemData = item?.getModel() as any;
+        if (!itemData) return;
+        setEditData({
+          id: itemData.id,
+          label: itemData.label,
+          model: itemData.data.model,
+        });
+        setShowEditModal(true);
+      });
+      graphRef.current.data(data);
+      graphRef.current.render();
+    } else {
+      graphRef.current.changeData(data);
+      graphRef.current.refresh();
+      setTimeout(() => {
+        graphRef.current?.fitView(20);
+      });
     }
-    graph.data(data);
-    graph.on('node:click', ({ item }) => {
-      const data = item?.getModel() as any;
-      if (!data) return;
-      setEditData({ id: data.id, model: data.data.model });
-      setShowEditModal(true);
-    });
-    graph.render();
-  }, []);
-
+  }, [data]);
+  if (!data) return <h1>Loading...</h1>;
   return (
     <>
       <div
@@ -232,7 +115,14 @@ const GraphContainer = () => {
           showEditModal ? styles.edit : ''
         }`}
         ref={ref}
-      ></div>
+      />
+      {!showEditModal && (
+        <div className={styles['add-button']} onClick={openAddModal}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="#ffffff">
+            <path d="M12.5 7V0H7.5L7.5 7H0V12H7.5L7.5 20H12.5V12H20V7H12.5Z" />
+          </svg>
+        </div>
+      )}
       {showEditModal && editData && (
         <EditModal {...editData} closeEditModal={closeEditModal} />
       )}

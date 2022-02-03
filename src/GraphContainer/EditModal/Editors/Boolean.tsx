@@ -1,5 +1,6 @@
+import { useCallback, useEffect } from 'react';
 import { EditorProps } from 'react-data-grid';
-import { ModelRow } from '../EditModal';
+import { ModelRow } from '../../../mockData';
 import styles from '../EditModal.module.scss';
 
 const BooleanEditor = ({
@@ -7,23 +8,39 @@ const BooleanEditor = ({
   row,
   onClose,
   onRowChange,
-}: EditorProps<ModelRow>) => {
+  isCheckbox = false,
+}: EditorProps<ModelRow> & {
+  isCheckbox?: boolean;
+}) => {
   const val = row[column.key];
+  const onChange = useCallback(
+    () =>
+      onRowChange({
+        ...row,
+        [column.key]: val === 'true' ? 'false' : 'true',
+      }),
+    [column, row],
+  );
+
   return (
     <div className={styles['boolean-input']}>
-      <button
-        onClick={() =>
-          onRowChange({
-            ...row,
-            [column.key]: val === 'true' ? 'false' : 'true',
-          })
-        }
-        ref={(el) => el?.focus()}
-        type="button"
-        onBlur={() => onClose(true)}
-      >
-        {val}
-      </button>
+      {isCheckbox ? (
+        <input
+          // onBlur={() => onClose(true)}
+          type="checkbox"
+          checked={val === 'true'}
+          onChange={onChange}
+        />
+      ) : (
+        <button
+          onClick={onChange}
+          ref={(el) => el?.focus()}
+          type="button"
+          // onBlur={() => onClose(true)}
+        >
+          {val}
+        </button>
+      )}
     </div>
   );
 };

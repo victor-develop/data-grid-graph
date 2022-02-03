@@ -1,0 +1,48 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.modal {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  &.full-size {
+    inset: 40px;
+    transform: unset;
+  }
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: fixed;
+  background: #ffffff;
+  padding: 20px;
+  z-index: 1000;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+  .close-button {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: system-ui;
+  }
+  .bottom {
+    margin-top: auto;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    .cancel-button {
+      color: #ffffff;
+      background: rgb(187, 67, 67);
+    }
+    .save-button {
+      color: #ffffff;
+      background: rgb(63, 136, 73);
+    }
+  }
+}
