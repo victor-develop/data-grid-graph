@@ -223,14 +223,30 @@ export const getGraphData = (): Data => {
   return {
     nodes: [...nodeMap.values()],
     edges: edges.map((edge: any) => {
+      const sourceNode = nodeMap.get(edge.source) as INode;
       const sourceRows =
-        nodeMap.get(edge.target)?.data.model.rows.filter((row) => {
-          return row.__sourceModel__ === edge.source;
-        }) ?? [];
+        nodeMap
+          .get(edge.target)
+          ?.data.model.rows.filter(
+            (row) => row.__sourceModel__ === edge.source,
+          ) ?? [];
       return {
         ...edge,
         label: sourceRows.map((row) => row['Field Key']).join(', '),
-        data: sourceRows.map((row) => `${row['Field Key']}()`),
+        data: sourceRows.map((row) => {
+          const equalKeyValues: string[] = [];
+          const sourceRow = sourceNode.data.model.rows.find(
+            (it) => it['Field Key'] === row['Field Key'],
+          ) as ModelRow;
+
+          Object.entries(row).forEach(([key, value]) => {
+            if (key === '__sourceModel__') return;
+            if (sourceRow[key] === value) {
+              equalKeyValues.push(key);
+            }
+          });
+          return `${row['Field Key']}(${equalKeyValues.join(', ')})`;
+        }),
       };
     }),
   };
